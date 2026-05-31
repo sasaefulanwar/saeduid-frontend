@@ -71,57 +71,151 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <h1>Budget Management 💰</h1>
-
-    <h2>Create Budget</h2>
-
-    <select v-model="categoryId">
-      <option value="">Select Category</option>
-
-      <option
-        v-for="category in categories"
-        :key="category.id"
-        :value="category.id"
-      >
-        {{ category.name }}
-      </option>
-    </select>
-
-    <input v-model="limitAmount" type="number" placeholder="Limit Amount" />
-
-    <input v-model="month" type="number" placeholder="Month" />
-
-    <input v-model="year" type="number" placeholder="Year" />
-
-    <button @click="createBudget">Create Budget</button>
-
-    <hr />
-
-    <h2>Budget Monitoring 🚨</h2>
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-slate-900">Manajemen Budget 💰</h1>
+      <p class="text-slate-500 mt-1">
+        Atur batas pengeluaran biar kantong nggak jebol.
+      </p>
+    </div>
 
     <div
-      v-for="item in statusList"
-      :key="item.category"
-      style="border: 1px solid #ddd; padding: 20px; margin-top: 20px"
+      class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 mb-8"
     >
-      <h3>
-        {{ item.category }}
-      </h3>
+      <h2 class="text-lg font-semibold mb-4 border-b pb-2">
+        ➕ Buat Budget Baru
+      </h2>
 
-      <p>Limit: Rp {{ item.limit }}</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1"
+            >Kategori</label
+          >
+          <select
+            v-model="categoryId"
+            class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            <option value="" disabled>Pilih Kategori</option>
+            <option
+              v-for="category in categories"
+              :key="category.id"
+              :value="category.id"
+            >
+              {{ category.name }}
+            </option>
+          </select>
+        </div>
 
-      <p>Spent: Rp {{ item.spent }}</p>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1"
+            >Batas Maksimal (Rp)</label
+          >
+          <input
+            v-model="limitAmount"
+            type="number"
+            placeholder="Contoh: 1500000"
+            class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-      <p>Remaining: Rp {{ item.remaining }}</p>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1"
+            >Bulan (1-12)</label
+          >
+          <input
+            v-model="month"
+            type="number"
+            min="1"
+            max="12"
+            class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
 
-      <p>
-        Status:
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1"
+            >Tahun</label
+          >
+          <input
+            v-model="year"
+            type="number"
+            class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
 
-        <span v-if="item.status === 'exceeded'"> 🚨 EXCEEDED </span>
+      <div class="mt-6 flex justify-end">
+        <button
+          @click="createBudget"
+          :disabled="isLoading"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-xl transition-all disabled:opacity-70"
+        >
+          {{ isLoading ? "Menyimpan..." : "Simpan Budget" }}
+        </button>
+      </div>
+    </div>
 
-        <span v-else> ✅ SAFE </span>
-      </p>
+    <h2 class="text-xl font-bold mb-4 text-slate-900">Monitoring Budget 🚨</h2>
+
+    <div
+      v-if="statusList.length === 0"
+      class="text-center py-10 bg-white rounded-3xl border border-slate-200 text-slate-400"
+    >
+      Belum ada budget yang diatur bulan ini.
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div
+        v-for="item in statusList"
+        :key="item.category"
+        :class="[
+          'rounded-3xl p-6 border shadow-sm transition-all',
+          item.status === 'exceeded'
+            ? 'bg-red-50 border-red-200'
+            : 'bg-white border-slate-200',
+        ]"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="font-bold text-lg text-slate-800">{{ item.category }}</h3>
+          <div
+            :class="[
+              'flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold',
+              item.status === 'exceeded'
+                ? 'bg-red-100 text-red-700'
+                : 'bg-green-100 text-green-700',
+            ]"
+          >
+            <AlertCircle v-if="item.status === 'exceeded'" :size="14" />
+            <CheckCircle v-else :size="14" />
+            {{ item.status === "exceeded" ? "EXCEEDED" : "SAFE" }}
+          </div>
+        </div>
+
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Batas Budget:</span>
+            <span class="font-semibold">{{ formatCurrency(item.limit) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Terpakai:</span>
+            <span class="font-semibold text-red-500">{{
+              formatCurrency(item.spent)
+            }}</span>
+          </div>
+          <div
+            class="flex justify-between pt-2 border-t border-slate-200/60 mt-2"
+          >
+            <span class="text-slate-500 font-medium">Sisa Budget:</span>
+            <span
+              :class="[
+                'font-bold',
+                item.status === 'exceeded' ? 'text-red-600' : 'text-green-600',
+              ]"
+            >
+              {{ formatCurrency(item.remaining) }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

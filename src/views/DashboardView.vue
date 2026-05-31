@@ -52,8 +52,6 @@ onMounted(() => {
 
 <template>
   <div class="flex">
-    <AppSidebar />
-
     <div class="flex-1 bg-slate-100 p-8">
       <div class="min-h-screen bg-slate-100 p-8">
         <div class="flex justify-between items-center mb-8">
