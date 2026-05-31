@@ -1,152 +1,251 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import api from "../api/axios";
 import { formatCurrency } from "../utils/currency";
 import IncomeChart from "../components/IncomeChart.vue";
 import ExpenseChart from "../components/ExpenseChart.vue";
 import CategoryPieChart from "../components/CategoryPieChart.vue";
-import AppSidebar from "../components/AppSidebar.vue";
+import {
+  FileText,
+  Download,
+  Calendar,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-vue-next";
 
+const isLoadingReport = ref(false);
 const summary = ref({
+  total_balance: 0,
   total_income: 0,
   total_expense: 0,
-  balance: 0,
 });
 
-const loading = ref(true);
+// State baru buat nyimpen nama user
+const userName = ref("");
 
-const analytics = ref({
-  monthly_income: [],
-  monthly_expense: [],
-  category_distribution: [],
+// ==========================================
+// 🔥 FUNGSI DYNAMIC GREETING
+// ==========================================
+const greetingMsg = computed(() => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Selamat Pagi";
+  if (hour >= 12 && hour < 15) return "Selamat Siang";
+  if (hour >= 15 && hour < 18) return "Selamat Sore";
+  return "Selamat Malam";
 });
 
-const loadAnalytics = async () => {
+const greetingIcon = computed(() => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "🌅"; // Pagi
+  if (hour >= 12 && hour < 15) return "☀️"; // Siang
+  if (hour >= 15 && hour < 18) return "🌇"; // Sore
+  return "🌙"; // Malam
+});
+
+// ==========================================
+// DATA FETCHING
+// ==========================================
+const loadSummary = async () => {
   try {
-    const res = await api.get("/dashboard/analytics");
-
-    analytics.value = res.data;
+    const res = await api.get("/dashboard/summary");
+    summary.value = res.data;
   } catch (err) {
-    console.error(err);
+    console.error("Gagal memuat summary:", err);
   }
 };
 
-const loadSummary = async () => {
+const loadUserProfile = async () => {
   try {
-    loading.value = true;
+    const res = await api.get("/auth/profile");
+    // Ambil nama depan aja biar lebih akrab (split berdasarkan spasi)
+    userName.value = res.data.name.split(" ")[0];
+  } catch (err) {
+    console.error("Gagal memuat profil:", err);
+  }
+};
 
-    const res = await api.get("/dashboard/summary");
+const exportReport = async (type) => {
+  try {
+    isLoadingReport.value = true;
+    const response = await api.get(`/reports/${type}`, {
+      responseType: "blob",
+    });
 
-    summary.value = res.data;
+    const blob = new Blob([response.data], {
+      type: type === "pdf" ? "application/pdf" : "text/csv",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+
+    const dateStr = new Date().toISOString().split("T")[0];
+    link.setAttribute(
+      "download",
+      `Laporan_Keuangan_SAEduid_${dateStr}.${type}`,
+    );
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(`Gagal mengekspor ${type.toUpperCase()}:`, err);
+    alert(`Gagal mendownload laporan ${type.toUpperCase()}.`);
   } finally {
-    loading.value = false;
+    isLoadingReport.value = false;
   }
 };
 
 onMounted(() => {
   loadSummary();
-
-  loadAnalytics();
+  loadUserProfile(); // Load nama user pas dashboard dibuka
 });
 </script>
 
 <template>
-  <div class="flex">
-    <div class="flex-1 bg-slate-100 p-8">
-      <div class="min-h-screen bg-slate-100 p-8">
-        <div class="flex justify-between items-center mb-8">
-          <div>
-            <div class="mb-8">
-              <h1 class="text-4xl font-bold">Welcome back 👋</h1>
+  <div class="max-w-7xl mx-auto">
+    <!-- Header Dashboard dengan Dynamic Greeting -->
+    <div
+      class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8"
+    >
+      <div>
+        <h1
+          class="text-4xl font-bold text-slate-900 dark:text-white tracking-tight"
+        >
+          {{ greetingMsg }}, {{ userName || "User" }} {{ greetingIcon }}
+        </h1>
+        <p
+          class="text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2"
+        >
+          <Calendar :size="16" /> Pantau arus kas dan kendalikan anggaran
+          keuanganmu.
+        </p>
+      </div>
 
-              <p class="text-gray-500 mt-2">
-                Track your finances and stay on budget.
-              </p>
-            </div>
+      <!-- Tombol Aksi Laporan -->
+      <div class="flex items-center gap-3">
+        <button
+          @click="exportReport('csv')"
+          :disabled="isLoadingReport"
+          class="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all shadow-sm hover:shadow active:scale-95 disabled:opacity-50"
+        >
+          <Download :size="18" class="text-slate-500 dark:text-slate-400" />
+          <span>Export CSV</span>
+        </button>
+
+        <button
+          @click="exportReport('pdf')"
+          :disabled="isLoadingReport"
+          class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50"
+        >
+          <FileText :size="18" />
+          <span>{{ isLoadingReport ? "Mengunduh..." : "Cetak PDF" }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Ringkasan Statistik Card Utama (Quick Stats) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- Card Saldo -->
+      <div
+        class="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden border border-slate-800 dark:border-slate-700/50 flex flex-col justify-between transition-colors"
+      >
+        <div
+          class="absolute -right-4 -bottom-4 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl"
+        ></div>
+        <div class="flex justify-between items-start mb-4 relative z-10">
+          <div
+            class="p-3 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/5"
+          >
+            <Wallet :size="24" class="text-blue-400" />
           </div>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <router-link
-            to="/transactions"
-            class="bg-white rounded-2xl p-4 shadow hover:shadow-lg"
+        <div class="relative z-10">
+          <p
+            class="text-sm font-medium text-slate-400 uppercase tracking-wider mb-1"
           >
-            ➕ Add Transaction
-          </router-link>
-
-          <router-link
-            to="/categories"
-            class="bg-white rounded-2xl p-4 shadow hover:shadow-lg"
-          >
-            📂 Manage Categories
-          </router-link>
-
-          <router-link
-            to="/budgets"
-            class="bg-white rounded-2xl p-4 shadow hover:shadow-lg"
-          >
-            💰 Manage Budgets
-          </router-link>
+            Total Saldo Saat Ini
+          </p>
+          <h3 class="text-4xl font-extrabold tracking-tight">
+            {{ formatCurrency(summary.total_balance) }}
+          </h3>
         </div>
+      </div>
 
-        <AppLoader v-if="loading" />
-
-        <div v-else>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div
-              class="bg-green-50 border-green-200 rounded-3xl shadow-lg p-6 hover:shadow-xl transition"
-            >
-              <h3 class="text-gray-500">Income</h3>
-
-              <p class="text-3xl font-bold mt-2">
-                {{ formatCurrency(summary.total_income) }}
-              </p>
-            </div>
-
-            <div
-              class="bg-red-50 border-red-200 rounded-3xl shadow-lg p-6 hover:shadow-xl transition"
-            >
-              <h3 class="text-gray-500">Expense</h3>
-
-              <p class="text-3xl font-bold mt-2">
-                {{ formatCurrency(summary.total_expense) }}
-              </p>
-            </div>
-
-            <div
-              class="bg-blue-50 border-blue-200 rounded-3xl shadow-lg p-6 hover:shadow-xl transition"
-            >
-              <h3 class="text-gray-500">Balance</h3>
-
-              <p class="text-3xl font-bold mt-2">
-                {{
-                  formatCurrency(
-                    (summary.total_income || 0) - (summary.total_expense || 0),
-                  )
-                }}
-              </p>
-            </div>
+      <!-- Card Pemasukan -->
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between transition-colors hover:shadow-md"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <div
+            class="p-3 bg-green-50 dark:bg-green-900/20 rounded-2xl border border-green-100 dark:border-green-800/30"
+          >
+            <TrendingUp :size="24" class="text-green-600 dark:text-green-400" />
           </div>
+        </div>
+        <div>
+          <p
+            class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1"
+          >
+            Pemasukan
+          </p>
+          <h3
+            class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight"
+          >
+            {{ formatCurrency(summary.total_income) }}
+          </h3>
+        </div>
+      </div>
 
-          <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <div class="bg-white rounded-3xl shadow-lg border border-slate-200">
-              <h2 class="font-semibold mb-4">Income Trend 📈</h2>
-
-              <IncomeChart :data="analytics.monthly_income" />
-            </div>
-
-            <div class="bg-white rounded-3xl shadow-lg border border-slate-200">
-              <h2 class="font-semibold mb-4">Expense Trend 📉</h2>
-
-              <ExpenseChart :data="analytics.monthly_expense" />
-            </div>
+      <!-- Card Pengeluaran -->
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between transition-colors hover:shadow-md"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <div
+            class="p-3 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-800/30"
+          >
+            <TrendingDown :size="24" class="text-red-600 dark:text-red-400" />
           </div>
+        </div>
+        <div>
+          <p
+            class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1"
+          >
+            Pengeluaran
+          </p>
+          <h3
+            class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight"
+          >
+            {{ formatCurrency(summary.total_expense) }}
+          </h3>
+        </div>
+      </div>
+    </div>
 
-          <div class="bg-white p-6 rounded-2xl shadow mt-8">
-            <h2 class="font-semibold mb-4">Expense Categories 🥧</h2>
-
-            <CategoryPieChart :data="analytics.category_distribution" />
-          </div>
+    <!-- Area Visualisasi Chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div
+        class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm transition-colors"
+      >
+        <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">
+          Grafik Transaksi
+        </h3>
+        <div class="space-y-6">
+          <IncomeChart />
+          <ExpenseChart />
+        </div>
+      </div>
+      <div
+        class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm flex flex-col justify-between transition-colors"
+      >
+        <div>
+          <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-2">
+            Distribusi Pengeluaran
+          </h3>
+          <CategoryPieChart />
         </div>
       </div>
     </div>
