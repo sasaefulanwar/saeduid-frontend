@@ -49,7 +49,14 @@ const greetingIcon = computed(() => {
 const loadSummary = async () => {
   try {
     const res = await api.get("/dashboard/summary");
-    summary.value = res.data;
+
+    // 🔥 KITA MAPPING DATANYA DI SINI BIAR COCOK SAMA TEMPLATE
+    summary.value = {
+      total_income: res.data.total_income || 0,
+      total_expense: res.data.total_expense || 0,
+      // INI KUNCINYA: Ambil net_balance dari backend, masukin ke total_balance
+      total_balance: res.data.net_balance || 0,
+    };
   } catch (err) {
     console.error("Gagal memuat summary:", err);
   }
@@ -58,7 +65,6 @@ const loadSummary = async () => {
 const loadUserProfile = async () => {
   try {
     const res = await api.get("/auth/profile");
-    // Ambil nama depan aja biar lebih akrab (split berdasarkan spasi)
     userName.value = res.data.name.split(" ")[0];
   } catch (err) {
     console.error("Gagal memuat profil:", err);
