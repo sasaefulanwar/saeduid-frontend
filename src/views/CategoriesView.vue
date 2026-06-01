@@ -2,7 +2,15 @@
 import { ref, onMounted } from "vue";
 import api from "../api/axios";
 import { toast } from "vue3-toastify";
-import { Edit, Trash2 } from "lucide-vue-next";
+import {
+  Edit,
+  Trash2,
+  Tag,
+  Activity,
+  PlusCircle,
+  XCircle,
+  FolderOpen,
+} from "lucide-vue-next";
 
 const categories = ref([]);
 const isLoading = ref(false);
@@ -42,11 +50,9 @@ const saveCategory = async () => {
     };
 
     if (isEditing.value) {
-      // UPDATE DATA
       await api.put(`/categories/${editId.value}`, payload);
       toast.success("Kategori berhasil diupdate!");
     } else {
-      // BIKIN DATA BARU
       await api.post("/categories", payload);
       toast.success("Kategori baru berhasil ditambahkan!");
     }
@@ -67,7 +73,6 @@ const editCategory = (cat) => {
   name.value = cat.name;
   type.value = cat.type;
 
-  // Auto scroll ke atas
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
@@ -103,137 +108,178 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto">
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900 dark:text-white">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
+    <div class="mb-10">
+      <h1
+        class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight"
+      >
         Kategori Transaksi 📂
       </h1>
-      <p class="text-slate-500 dark:text-slate-400 mt-1">
-        Kelola kategori untuk merapikan pencatatan keuanganmu.
+      <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium">
+        Bikin laci-laci khusus buat merapikan pencatatan uangmu.
       </p>
     </div>
 
-    <!-- Form Card -->
     <div
-      class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 mb-8 transition-colors"
+      class="bg-white dark:bg-slate-800/90 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700/60 p-8 mb-10 backdrop-blur-sm transition-colors"
     >
       <div
-        class="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-700 pb-2"
+        class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/80 pb-5 mb-6"
       >
-        <h2 class="text-lg font-semibold text-slate-800 dark:text-white">
-          {{ isEditing ? "✏️ Edit Kategori" : "➕ Tambah Kategori Baru" }}
+        <h2
+          class="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white tracking-tight"
+        >
+          <component
+            :is="isEditing ? Edit : PlusCircle"
+            :size="20"
+            class="text-blue-500"
+          />
+          {{ isEditing ? "Edit Kategori" : "Tambah Kategori Baru" }}
         </h2>
+        <button
+          v-if="isEditing"
+          @click="cancelEdit"
+          class="flex items-center gap-1 text-sm font-semibold text-rose-500 hover:text-rose-600 transition-colors"
+        >
+          <XCircle :size="16" /> Batal Edit
+        </button>
       </div>
 
-      <div class="flex flex-col md:flex-row items-end gap-4">
-        <div class="flex-1 w-full">
+      <div class="flex flex-col md:flex-row items-end gap-5">
+        <div class="flex-1 w-full space-y-1.5">
           <label
-            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+            class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
             >Nama Kategori</label
           >
-          <input
-            v-model="name"
-            placeholder="Cth: Makanan, Transport, Gaji"
-            class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-            @keyup.enter="saveCategory"
-          />
+          <div class="relative group">
+            <div
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors"
+            >
+              <Tag :size="16" />
+            </div>
+            <input
+              v-model="name"
+              placeholder="Cth: Nongkrong, Bensin, Gaji"
+              class="w-full pl-11 pr-4 py-3 text-sm rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400"
+              @keyup.enter="saveCategory"
+            />
+          </div>
         </div>
 
-        <div class="w-full md:w-64">
+        <div class="w-full md:w-64 space-y-1.5">
           <label
-            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+            class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
             >Tipe</label
           >
-          <select
-            v-model="type"
-            class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          >
-            <option value="income">Pemasukan (Income)</option>
-            <option value="expense">Pengeluaran (Expense)</option>
-          </select>
+          <div class="relative group">
+            <div
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors"
+            >
+              <Activity :size="16" />
+            </div>
+            <select
+              v-model="type"
+              class="w-full pl-11 pr-4 py-3 text-sm rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+            >
+              <option value="income">Pemasukan</option>
+              <option value="expense">Pengeluaran</option>
+            </select>
+          </div>
         </div>
 
-        <div class="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
+        <div class="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
           <button
             v-if="isEditing"
             @click="cancelEdit"
-            class="w-full md:w-auto bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-2 px-4 rounded-xl transition-all shadow-sm"
+            class="w-full md:w-auto text-sm font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 py-3 px-6 rounded-full transition-all duration-300"
           >
             Batal
           </button>
           <button
             @click="saveCategory"
             :disabled="isLoading || !name"
-            class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-xl transition-all shadow-sm disabled:opacity-50"
+            class="w-full md:w-auto text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 px-8 rounded-full transition-all duration-300 shadow-md shadow-blue-500/30 active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
           >
-            {{ isLoading ? "Loading..." : isEditing ? "Update" : "Tambah" }}
+            <span
+              v-if="isLoading"
+              class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+            ></span>
+            {{ isLoading ? "Processing..." : isEditing ? "Update" : "Simpan" }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- List Card -->
     <div
-      class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors"
+      v-if="categories.length === 0"
+      class="flex flex-col items-center justify-center py-16 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-[2rem] bg-white/50 dark:bg-slate-800/50"
     >
       <div
-        class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50"
+        class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3"
       >
-        <h2 class="font-semibold text-slate-800 dark:text-slate-200">
-          Daftar Kategori Tersimpan
-        </h2>
+        <FolderOpen :size="24" class="text-slate-300 dark:text-slate-500" />
       </div>
+      <p class="text-slate-400 dark:text-slate-500 font-medium text-sm">
+        Laci kategorimu masih kosong nih.
+      </p>
+    </div>
 
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       <div
-        v-if="categories.length === 0"
-        class="text-center py-10 text-slate-400 dark:text-slate-500"
+        v-for="category in categories"
+        :key="category.id"
+        class="bg-white dark:bg-slate-800/90 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/60 p-5 shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600 transition-all duration-300 group flex items-center justify-between backdrop-blur-sm"
       >
-        Belum ada kategori yang dibuat.
-      </div>
-
-      <ul class="divide-y divide-slate-100 dark:divide-slate-700/50">
-        <li
-          v-for="category in categories"
-          :key="category.id"
-          class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group"
-        >
-          <div class="flex items-center gap-3">
-            <span class="font-medium text-slate-700 dark:text-slate-300">{{
-              category.name
-            }}</span>
-            <span
+        <div class="flex items-center gap-4">
+          <div
+            :class="[
+              'w-10 h-10 rounded-full flex items-center justify-center border',
+              category.type === 'income'
+                ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30 text-emerald-500'
+                : 'bg-rose-50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-800/30 text-rose-500',
+            ]"
+          >
+            <Tag :size="16" />
+          </div>
+          <div>
+            <h3
+              class="font-bold text-slate-800 dark:text-slate-200 text-sm tracking-tight mb-0.5"
+            >
+              {{ category.name }}
+            </h3>
+            <p
               :class="[
-                'px-3 py-1 rounded-full text-xs font-semibold',
+                'text-[10px] font-extrabold uppercase tracking-wider',
                 category.type === 'income'
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+                  ? 'text-emerald-500'
+                  : 'text-rose-500',
               ]"
             >
-              {{ category.type === "income" ? "Income" : "Expense" }}
-            </span>
+              {{ category.type === "income" ? "Pemasukan" : "Pengeluaran" }}
+            </p>
           </div>
+        </div>
 
-          <!-- Tombol Aksi (Muncul pas di hover) -->
-          <div
-            class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+        <div
+          class="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full overflow-hidden shadow-sm"
+        >
+          <button
+            @click="editCategory(category)"
+            class="p-2 text-slate-400 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+            title="Edit"
           >
-            <button
-              @click="editCategory(category)"
-              class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-              title="Edit Kategori"
-            >
-              <Edit :size="18" />
-            </button>
-            <button
-              @click="deleteCategory(category.id)"
-              class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-              title="Hapus Kategori"
-            >
-              <Trash2 :size="18" />
-            </button>
-          </div>
-        </li>
-      </ul>
+            <Edit :size="14" stroke-width="2.5" />
+          </button>
+          <div class="w-px h-3 bg-slate-200 dark:bg-slate-700"></div>
+          <button
+            @click="deleteCategory(category.id)"
+            class="p-2 text-slate-400 hover:text-rose-500 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+            title="Hapus"
+          >
+            <Trash2 :size="14" stroke-width="2.5" />
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>

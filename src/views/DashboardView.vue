@@ -21,26 +21,28 @@ const summary = ref({
   total_expense: 0,
 });
 
-// State baru buat nyimpen nama user
 const userName = ref("");
+const incomeData = ref([]);
+const expenseData = ref([]);
+const categoryData = ref([]);
 
 // ==========================================
 // 🔥 FUNGSI DYNAMIC GREETING
 // ==========================================
 const greetingMsg = computed(() => {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "Selamat Pagi";
-  if (hour >= 12 && hour < 15) return "Selamat Siang";
-  if (hour >= 15 && hour < 18) return "Selamat Sore";
-  return "Selamat Malam";
+  if (hour >= 5 && hour < 12) return "Good Morning";
+  if (hour >= 12 && hour < 15) return "Good Afternoon";
+  if (hour >= 15 && hour < 18) return "Good Evening";
+  return "Good Night";
 });
 
 const greetingIcon = computed(() => {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "🌅"; // Pagi
-  if (hour >= 12 && hour < 15) return "☀️"; // Siang
-  if (hour >= 15 && hour < 18) return "🌇"; // Sore
-  return "🌙"; // Malam
+  if (hour >= 5 && hour < 12) return "🌅";
+  if (hour >= 12 && hour < 15) return "☀️";
+  if (hour >= 15 && hour < 18) return "🌇";
+  return "🌙";
 });
 
 // ==========================================
@@ -49,12 +51,9 @@ const greetingIcon = computed(() => {
 const loadSummary = async () => {
   try {
     const res = await api.get("/dashboard/summary");
-
-    // 🔥 KITA MAPPING DATANYA DI SINI BIAR COCOK SAMA TEMPLATE
     summary.value = {
       total_income: res.data.total_income || 0,
       total_expense: res.data.total_expense || 0,
-      // INI KUNCINYA: Ambil net_balance dari backend, masukin ke total_balance
       total_balance: res.data.net_balance || 0,
     };
   } catch (err) {
@@ -93,7 +92,6 @@ const exportReport = async (type) => {
 
     document.body.appendChild(link);
     link.click();
-
     link.remove();
     window.URL.revokeObjectURL(url);
   } catch (err) {
@@ -104,101 +102,115 @@ const exportReport = async (type) => {
   }
 };
 
+const loadAnalytics = async () => {
+  try {
+    const res = await api.get("/dashboard/analytics");
+    incomeData.value = res.data.monthly_income || [];
+    expenseData.value = res.data.monthly_expense || [];
+    categoryData.value = res.data.category_distribution || [];
+  } catch (err) {
+    console.error("Gagal memuat data analytics:", err);
+  }
+};
+
 onMounted(() => {
   loadSummary();
-  loadUserProfile(); // Load nama user pas dashboard dibuka
+  loadUserProfile();
+  loadAnalytics();
 });
 </script>
 
-
-<!-- ASSALAMUALAIKUM -->
- 
 <template>
-  <div class="max-w-7xl mx-auto">
-    <!-- Header Dashboard dengan Dynamic Greeting -->
+  <!-- Wrapper dengan padding yang pas -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
+    <!-- Header Dashboard -->
     <div
-      class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8"
+      class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10"
     >
       <div>
         <h1
-          class="text-4xl font-bold text-slate-900 dark:text-white tracking-tight"
+          class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2"
         >
-          {{ greetingMsg }}, {{ userName || "User" }} {{ greetingIcon }}
+          {{ greetingMsg }}, {{ userName || "Creative" }} {{ greetingIcon }}
         </h1>
         <p
-          class="text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2"
+          class="text-slate-500 dark:text-slate-400 flex items-center gap-2 text-sm font-medium"
         >
-          <Calendar :size="16" /> Pantau arus kas dan kendalikan anggaran
-          keuanganmu.
+          <Calendar :size="16" /> Overview of your financial status today.
         </p>
       </div>
 
-      <!-- Tombol Aksi Laporan -->
+      <!-- Tombol Aksi Laporan (Pill Shaped) -->
       <div class="flex items-center gap-3">
         <button
           @click="exportReport('csv')"
           :disabled="isLoadingReport"
-          class="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all shadow-sm hover:shadow active:scale-95 disabled:opacity-50"
+          class="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-6 rounded-full border border-slate-200 dark:border-slate-700 transition-all duration-300 shadow-sm hover:shadow active:scale-95 disabled:opacity-50 text-sm"
         >
-          <Download :size="18" class="text-slate-500 dark:text-slate-400" />
+          <Download :size="16" class="text-slate-500 dark:text-slate-400" />
           <span>Export CSV</span>
         </button>
 
         <button
           @click="exportReport('pdf')"
           :disabled="isLoadingReport"
-          class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95 disabled:opacity-50"
+          class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-6 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 disabled:opacity-50 text-sm"
         >
-          <FileText :size="18" />
-          <span>{{ isLoadingReport ? "Mengunduh..." : "Cetak PDF" }}</span>
+          <FileText :size="16" />
+          <span>{{ isLoadingReport ? "Processing..." : "Export PDF" }}</span>
         </button>
       </div>
     </div>
 
     <!-- Ringkasan Statistik Card Utama (Quick Stats) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <!-- Card Saldo -->
+      <!-- Card Saldo (Premium Gradient) -->
       <div
-        class="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden border border-slate-800 dark:border-slate-700/50 flex flex-col justify-between transition-colors"
+        class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900 dark:from-slate-800 dark:via-slate-900 dark:to-blue-950 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden border border-slate-800 dark:border-slate-700/50 flex flex-col justify-between transition-all hover:-translate-y-1 duration-300 group"
       >
+        <!-- Abstract Glow Background -->
         <div
-          class="absolute -right-4 -bottom-4 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl"
+          class="absolute -right-8 -top-8 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl group-hover:bg-blue-400/30 transition-all duration-500"
         ></div>
-        <div class="flex justify-between items-start mb-4 relative z-10">
+        <div
+          class="absolute -left-8 -bottom-8 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl"
+        ></div>
+
+        <div class="flex justify-between items-start mb-6 relative z-10">
           <div
-            class="p-3 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/5"
+            class="p-3.5 bg-white/10 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner"
           >
-            <Wallet :size="24" class="text-blue-400" />
+            <Wallet :size="24" class="text-blue-300" />
           </div>
         </div>
         <div class="relative z-10">
           <p
-            class="text-sm font-medium text-slate-400 uppercase tracking-wider mb-1"
+            class="text-xs font-semibold text-slate-300 uppercase tracking-widest mb-1.5 opacity-80"
           >
-            Total Saldo Saat Ini
+            Total Balance
           </p>
-          <h3 class="text-4xl font-extrabold tracking-tight">
+          <h3 class="text-4xl lg:text-5xl font-extrabold tracking-tight">
             {{ formatCurrency(summary.total_balance) }}
           </h3>
         </div>
       </div>
 
-      <!-- Card Pemasukan -->
+      <!-- Card Pemasukan (Clean Modern) -->
       <div
-        class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between transition-colors hover:shadow-md"
+        class="bg-white dark:bg-slate-800/80 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700/60 shadow-sm flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 duration-300 backdrop-blur-sm"
       >
-        <div class="flex justify-between items-start mb-4">
+        <div class="flex justify-between items-start mb-6">
           <div
-            class="p-3 bg-green-50 dark:bg-green-900/20 rounded-2xl border border-green-100 dark:border-green-800/30"
+            class="p-3.5 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100/50 dark:border-emerald-500/20"
           >
-            <TrendingUp :size="24" class="text-green-600 dark:text-green-400" />
+            <TrendingUp :size="24" class="text-emerald-500" />
           </div>
         </div>
         <div>
           <p
-            class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1"
+            class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Pemasukan
+            Total Income
           </p>
           <h3
             class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight"
@@ -208,22 +220,22 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Card Pengeluaran -->
+      <!-- Card Pengeluaran (Clean Modern) -->
       <div
-        class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between transition-colors hover:shadow-md"
+        class="bg-white dark:bg-slate-800/80 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700/60 shadow-sm flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1 duration-300 backdrop-blur-sm"
       >
-        <div class="flex justify-between items-start mb-4">
+        <div class="flex justify-between items-start mb-6">
           <div
-            class="p-3 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-800/30"
+            class="p-3.5 bg-rose-50 dark:bg-rose-500/10 rounded-2xl border border-rose-100/50 dark:border-rose-500/20"
           >
-            <TrendingDown :size="24" class="text-red-600 dark:text-red-400" />
+            <TrendingDown :size="24" class="text-rose-500" />
           </div>
         </div>
         <div>
           <p
-            class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1"
+            class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Pengeluaran
+            Total Expense
           </p>
           <h3
             class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight"
@@ -236,25 +248,36 @@ onMounted(() => {
 
     <!-- Area Visualisasi Chart -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Line Charts Container -->
       <div
-        class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm transition-colors"
+        class="lg:col-span-2 bg-white dark:bg-slate-800/80 rounded-[2rem] border border-slate-100 dark:border-slate-700/60 p-7 shadow-sm transition-colors backdrop-blur-sm"
       >
-        <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-4">
-          Grafik Transaksi
-        </h3>
-        <div class="space-y-6">
-          <IncomeChart />
-          <ExpenseChart />
+        <div class="flex items-center justify-between mb-6">
+          <h3
+            class="text-xl font-bold text-slate-900 dark:text-white tracking-tight"
+          >
+            Transactions Overview
+          </h3>
+        </div>
+        <div class="space-y-8">
+          <IncomeChart :data="incomeData" />
+          <ExpenseChart :data="expenseData" />
         </div>
       </div>
+
+      <!-- Pie Chart Container -->
       <div
-        class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm flex flex-col justify-between transition-colors"
+        class="bg-white dark:bg-slate-800/80 rounded-[2rem] border border-slate-100 dark:border-slate-700/60 p-7 shadow-sm flex flex-col justify-between transition-colors backdrop-blur-sm"
       >
-        <div>
-          <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-2">
-            Distribusi Pengeluaran
+        <div class="h-full flex flex-col">
+          <h3
+            class="text-xl font-bold text-slate-900 dark:text-white tracking-tight mb-6"
+          >
+            Expense by Category
           </h3>
-          <CategoryPieChart />
+          <div class="flex-grow flex items-center justify-center">
+            <CategoryPieChart :data="categoryData" class="w-full" />
+          </div>
         </div>
       </div>
     </div>

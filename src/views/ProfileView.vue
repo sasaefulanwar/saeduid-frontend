@@ -10,14 +10,15 @@ import {
   Check,
   X,
   Camera,
+  Edit3,
+  Save,
+  UserCircle,
 } from "lucide-vue-next";
 
 const user = ref(null);
 const isEditing = ref(false);
 const editName = ref("");
 const isLoading = ref(false);
-
-// State untuk Upload Foto
 const fileInput = ref(null);
 const isUploadingAvatar = ref(false);
 
@@ -25,30 +26,23 @@ const loadProfile = async () => {
   try {
     const res = await api.get("/auth/profile");
     user.value = res.data;
-    editName.value = res.data.name; // Set data awal buat form edit
+    editName.value = res.data.name;
   } catch (err) {
     console.error("Gagal memuat profil:", err);
     toast.error("Gagal memuat data profil");
   }
 };
 
-// ==========================================
-// 🔥 FUNGSI EDIT NAMA PROFIL
-// ==========================================
 const saveProfile = async () => {
   if (!editName.value.trim()) {
     toast.warning("Nama tidak boleh kosong cuy!");
     return;
   }
-
   try {
     isLoading.value = true;
     await api.put("/auth/profile", { name: editName.value });
-
-    // Update state UI biar langsung ganti tanpa refresh
     user.value.name = editName.value;
     isEditing.value = false;
-
     toast.success("Profil berhasil diupdate! 🎉");
   } catch (err) {
     console.error(err);
@@ -63,44 +57,28 @@ const cancelEdit = () => {
   editName.value = user.value.name;
 };
 
-// ==========================================
-// 🔥 FUNGSI UPLOAD FOTO PROFIL
-// ==========================================
-const triggerFileInput = () => {
-  fileInput.value.click();
-};
+const triggerFileInput = () => fileInput.value.click();
 
 const handleFileUpload = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
-
-  // Validasi ukuran max 2MB
   if (file.size > 2 * 1024 * 1024) {
     toast.error("Ukuran gambar maksimal 2MB cuy!");
-    event.target.value = null;
     return;
   }
-
   const formData = new FormData();
   formData.append("avatar", file);
-
   try {
     isUploadingAvatar.value = true;
-    toast.info("Sedang mengupload gambar...");
-
     const res = await api.post("/auth/profile/avatar", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-
-    // Update state gambar langsung di UI
     user.value.avatar_url = res.data.avatar_url;
     toast.success("Foto profil berhasil diganti! 📸");
   } catch (err) {
-    console.error(err);
-    toast.error(err.response?.data?.error || "Gagal mengupload foto");
+    toast.error("Gagal mengupload foto");
   } finally {
     isUploadingAvatar.value = false;
-    event.target.value = null; // Reset input biar bisa pilih foto yg sama lagi
   }
 };
 
@@ -108,66 +86,55 @@ onMounted(loadProfile);
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto">
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900 dark:text-white">
+  <div class="max-w-3xl mx-auto px-4 py-8 font-sans">
+    <div class="mb-10">
+      <h1
+        class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight"
+      >
         Profil Saya 👤
       </h1>
-      <p class="text-slate-500 dark:text-slate-400 mt-1">
-        Kelola informasi akun personalmu.
+      <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium">
+        Kelola informasi akun personalmu dengan rapi.
       </p>
     </div>
 
-    <div
-      v-if="!user"
-      class="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 shadow-sm transition-colors"
-    >
-      Memuat data profil...
+    <div v-if="!user" class="text-center py-20 text-slate-400">
+      Loading profil...
     </div>
 
     <div
       v-else
-      class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors"
+      class="bg-white dark:bg-slate-800/90 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700/60 overflow-hidden backdrop-blur-sm transition-colors"
     >
-      <div
-        class="h-32 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-900"
-      ></div>
+      <!-- Cover Banner -->
+      <div class="h-32 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
-      <div class="px-8 pb-8">
+      <div class="px-8 pb-10">
+        <!-- Avatar Section -->
         <div class="relative flex justify-between items-end -mt-12 mb-6">
           <div
             @click="triggerFileInput"
-            class="relative w-24 h-24 rounded-full bg-white dark:bg-slate-800 p-1.5 shadow-md transition-colors cursor-pointer group"
+            class="relative w-28 h-28 rounded-full bg-white dark:bg-slate-800 p-2 shadow-lg cursor-pointer group transition-transform hover:scale-105"
           >
             <div
-              v-if="user?.avatar_url"
               class="w-full h-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700"
             >
               <img
+                v-if="user?.avatar_url"
                 :src="user.avatar_url"
                 class="w-full h-full object-cover"
-                alt="Profile"
               />
+              <div
+                v-else
+                class="w-full h-full flex items-center justify-center bg-blue-500 text-white font-bold text-4xl uppercase"
+              >
+                {{ user?.name?.charAt(0) }}
+              </div>
             </div>
-
             <div
-              v-else
-              class="w-full h-full rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-4xl font-bold uppercase"
-            >
-              {{ user?.name?.charAt(0) || "U" }}
-            </div>
-
-            <div
-              class="absolute inset-1.5 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300"
+              class="absolute inset-2 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all"
             >
               <Camera class="text-white" :size="24" />
-            </div>
-
-            <div
-              v-if="isUploadingAvatar"
-              class="absolute inset-1.5 rounded-full bg-black/60 flex items-center justify-center backdrop-blur-sm z-10"
-            >
-              <span class="animate-spin text-white text-xl">⏳</span>
             </div>
           </div>
 
@@ -175,100 +142,80 @@ onMounted(loadProfile);
             type="file"
             ref="fileInput"
             class="hidden"
-            accept="image/png, image/jpeg, image/jpg"
+            accept="image/*"
             @change="handleFileUpload"
           />
 
-          <div>
-            <button
-              v-if="!isEditing"
-              @click="isEditing = true"
-              class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-2 px-4 rounded-xl transition-colors text-sm flex items-center gap-2"
-            >
-              <User :size="16" /> Edit Profil
-            </button>
-            <button
-              v-else
-              @click="cancelEdit"
-              class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 font-medium py-2 px-4 rounded-xl transition-colors text-sm flex items-center gap-2"
-            >
-              <X :size="16" /> Batal
-            </button>
-          </div>
+          <!-- Edit Toggle Button -->
+          <button
+            @click="isEditing ? cancelEdit() : (isEditing = true)"
+            :class="[
+              isEditing
+                ? 'bg-rose-100 text-rose-600'
+                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200',
+            ]"
+            class="px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all hover:opacity-90"
+          >
+            <component :is="isEditing ? X : Edit3" :size="16" />
+            {{ isEditing ? "Batal" : "Edit Profil" }}
+          </button>
         </div>
 
-        <div class="mb-8">
-          <h2
-            v-if="!isEditing"
-            class="text-2xl font-bold text-slate-900 dark:text-white"
-          >
-            {{ user.name }}
-          </h2>
+        <!-- Name Section -->
+        <div class="mb-10">
+          <div v-if="!isEditing">
+            <h2
+              class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight"
+            >
+              {{ user.name }}
+            </h2>
+            <p class="text-slate-500 flex items-center gap-2 mt-2 font-medium">
+              <Mail :size="16" /> {{ user.email }}
+            </p>
+          </div>
 
-          <div v-else class="flex items-center gap-3 max-w-sm mt-1 mb-2">
+          <div v-else class="flex items-center gap-3 max-w-sm mt-1">
             <input
               v-model="editName"
-              type="text"
-              class="w-full px-4 py-2 rounded-xl border border-blue-300 dark:border-blue-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors shadow-sm"
-              @keyup.enter="saveProfile"
-              autofocus
+              class="w-full px-5 py-3 text-sm rounded-full border border-blue-300 dark:border-blue-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
             <button
               @click="saveProfile"
               :disabled="isLoading"
-              class="bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition-colors shadow-sm disabled:opacity-50"
-              title="Simpan Perubahan"
+              class="bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-full transition-all shadow-lg shadow-blue-500/30"
             >
-              <Check :size="20" />
+              <Save :size="18" />
             </button>
           </div>
-
-          <p
-            class="text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1"
-          >
-            <Mail :size="16" /> {{ user.email }}
-          </p>
         </div>
 
-        <div class="space-y-4">
-          <h3
-            class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2"
-          >
-            Detail Akun
-          </h3>
-
+        <!-- Details Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
-            class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
+            class="flex items-center justify-between p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700"
           >
             <div
-              class="flex items-center gap-3 text-slate-600 dark:text-slate-300"
+              class="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-bold text-sm"
             >
-              <Hash :size="20" class="text-blue-500 dark:text-blue-400" />
-              <span class="font-medium">User ID</span>
+              <Hash :size="20" class="text-blue-500" /> User ID
             </div>
             <span
-              class="font-semibold text-slate-900 dark:text-slate-100 font-mono text-xs md:text-sm"
+              class="font-mono text-xs font-semibold bg-white dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200"
               >{{ user.id }}</span
             >
           </div>
-
           <div
-            class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
+            class="flex items-center justify-between p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700"
           >
             <div
-              class="flex items-center gap-3 text-slate-600 dark:text-slate-300"
+              class="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-bold text-sm"
             >
-              <ShieldCheck
-                :size="20"
-                class="text-green-500 dark:text-green-400"
-              />
-              <span class="font-medium">Provider</span>
+              <ShieldCheck :size="20" class="text-emerald-500" /> Provider
             </div>
             <span
-              class="px-4 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase tracking-wide"
+              class="px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-widest"
+              >{{ user.provider }}</span
             >
-              {{ user.provider }}
-            </span>
           </div>
         </div>
       </div>
