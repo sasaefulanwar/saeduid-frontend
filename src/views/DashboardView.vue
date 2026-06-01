@@ -189,7 +189,10 @@ onMounted(() => {
           >
             Total Balance
           </p>
-          <h3 class="text-4xl lg:text-5xl font-extrabold tracking-tight">
+          <!-- Ganti bagian h3 ini di Card Saldo -->
+          <h3
+            class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight truncate w-full"
+          >
             {{ formatCurrency(summary.total_balance) }}
           </h3>
         </div>

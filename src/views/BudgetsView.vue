@@ -38,13 +38,20 @@ const loadCategories = async () => {
   }
 };
 
+// Ganti fungsi ini di Budgets.vue
 const loadBudgetStatus = async () => {
   try {
     const res = await api.get("/budgets/status");
-    statusList.value = res.data;
+    // 🔥 TAMBAHAN SAFETY: Kalau res.data null, paksa jadi array kosong []
+    statusList.value = res.data || [];
+    console.log("Data Budget:", statusList.value);
   } catch (err) {
-    console.error(err);
-    toast.error("Gagal memuat status budget.");
+    console.error("Gagal memuat status budget:", err);
+    // Jangan kasih toast error kalau cuma karena data kosong, tapi kasih kalau server mati
+    if (err.response?.status !== 404) {
+      toast.error("Gagal memuat status budget.");
+    }
+    statusList.value = []; // Reset ke array kosong biar UI gak zonk
   }
 };
 
