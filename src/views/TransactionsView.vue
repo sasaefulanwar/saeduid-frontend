@@ -477,13 +477,13 @@ onMounted(() => {
         <div
           v-for="trx in filteredTransactions"
           :key="trx.id"
-          class="flex items-center justify-between p-4 pl-5 pr-5 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-700/30 hover:border-slate-200 hover:shadow-sm transition-all duration-300 group"
+          class="flex items-center justify-between gap-4 p-4 pl-5 pr-5 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-700/30 hover:border-slate-200 hover:shadow-sm transition-all duration-300 group"
         >
-          <div class="flex items-center gap-5">
-            <!-- Icon Indikator Pemasukan/Pengeluaran -->
+          <!-- Kiri: Icon + Deskripsi (Kita kasih min-w-0 & flex-1 biar teks bisa terpotong rapi) -->
+          <div class="flex items-center gap-4 min-w-0 flex-1">
             <div
               :class="[
-                'w-12 h-12 rounded-full flex items-center justify-center shadow-inner transition-transform group-hover:scale-105',
+                'w-10 h-10 shrink-0 rounded-full flex items-center justify-center shadow-inner transition-transform group-hover:scale-105',
                 trx.type === 'income'
                   ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500'
                   : 'bg-rose-50 dark:bg-rose-900/20 text-rose-500',
@@ -491,22 +491,23 @@ onMounted(() => {
             >
               <ArrowUpCircle
                 v-if="trx.type === 'income'"
-                :size="22"
+                :size="20"
                 stroke-width="2.5"
               />
-              <ArrowDownCircle v-else :size="22" stroke-width="2.5" />
+              <ArrowDownCircle v-else :size="20" stroke-width="2.5" />
             </div>
-            <div>
+
+            <div class="min-w-0">
               <p
-                class="font-bold text-slate-800 dark:text-slate-200 text-sm mb-0.5 tracking-tight"
+                class="font-bold text-slate-800 dark:text-slate-200 text-sm truncate tracking-tight"
               >
                 {{ trx.description }}
               </p>
               <p
-                class="text-xs font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1.5"
+                class="text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1.5 truncate"
               >
                 <span
-                  class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md"
+                  class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md"
                   >{{ trx.category?.name || "Lainnya" }}</span
                 >
                 •
@@ -516,18 +517,17 @@ onMounted(() => {
                   ).toLocaleDateString("id-ID", {
                     day: "numeric",
                     month: "short",
-                    year: "numeric",
                   })
                 }}
               </p>
             </div>
           </div>
 
-          <div class="flex items-center gap-5">
-            <!-- Nominal Angka (Warna Tegas) -->
+          <!-- Kanan: Nominal + Aksi (Kita kasih shrink-0 biar nggak kena peres) -->
+          <div class="flex items-center gap-4 shrink-0">
             <div
               :class="[
-                'font-extrabold text-right text-base',
+                'font-extrabold text-right text-sm',
                 trx.type === 'income' ? 'text-emerald-500' : 'text-rose-500',
               ]"
             >
@@ -535,24 +535,24 @@ onMounted(() => {
               {{ formatCurrency(trx.amount) }}
             </div>
 
-            <!-- Tombol Aksi Kapsul Halus -->
+            <!-- Tombol Aksi -->
             <div
-              class="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full overflow-hidden shadow-sm"
+              class="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm"
             >
               <button
                 @click="editTransaction(trx)"
-                class="p-2.5 text-slate-400 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                class="p-2 text-slate-400 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 transition-colors"
                 title="Edit"
               >
-                <Edit :size="16" stroke-width="2.5" />
+                <Edit :size="14" stroke-width="2.5" />
               </button>
-              <div class="w-px h-5 bg-slate-200 dark:bg-slate-700"></div>
+              <div class="w-px h-4 bg-slate-200 dark:border-slate-700"></div>
               <button
                 @click="deleteTransaction(trx.id)"
-                class="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-white dark:hover:bg-slate-700 transition-colors"
                 title="Hapus"
               >
-                <Trash2 :size="16" stroke-width="2.5" />
+                <Trash2 :size="14" stroke-width="2.5" />
               </button>
             </div>
           </div>
