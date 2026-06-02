@@ -353,3 +353,25 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Ini "nyawa" biar buka-tutupnya mulus, bukan loncat kaku */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 500px; /* Cukup buat nampung isi tips-nya */
+  opacity: 1;
+}
+</style>
