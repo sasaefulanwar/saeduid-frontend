@@ -12,6 +12,7 @@ import {
   X,
   Moon,
   Sun,
+  Sparkles, // 🔥 Tambahin ini
 } from "lucide-vue-next";
 
 // Props dari App.vue buat mode Mobile
@@ -28,7 +29,6 @@ const authStore = useAuthStore();
 const isDark = ref(false);
 
 onMounted(() => {
-  // Cek apakah sebelumnya user udah pilih dark mode, atau settingan default HP/Laptop-nya dark
   if (
     localStorage.getItem("theme") === "dark" ||
     (!("theme" in localStorage) &&
@@ -57,11 +57,13 @@ const logout = () => {
   router.push("/login");
 };
 
+// 🔥 Menu sudah terintegrasi rapi
 const menus = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { name: "Transactions", path: "/transactions", icon: ArrowLeftRight },
   { name: "Budgets", path: "/budgets", icon: PieChart },
   { name: "Categories", path: "/categories", icon: FolderOpen },
+  { name: "AI Assistant", path: "/ai", icon: Sparkles },
   { name: "Profile", path: "/profile", icon: User },
 ];
 </script>
@@ -102,14 +104,16 @@ const menus = [
         </button>
       </div>
 
+      <!-- Menu Navigation -->
       <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
         <router-link
           v-for="menu in menus"
           :key="menu.path"
           :to="menu.path"
+          @click="emit('close')"
           :class="[
             'flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium',
-            route.path.startsWith(menu.path)
+            route.path === menu.path
               ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
               : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100',
           ]"
@@ -119,6 +123,7 @@ const menus = [
         </router-link>
       </nav>
 
+      <!-- Footer Actions -->
       <div
         class="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2"
       >

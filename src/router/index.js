@@ -6,6 +6,7 @@ import CategoriesView from "../views/CategoriesView.vue";
 import TransactionsView from "../views/TransactionsView.vue";
 import BudgetsView from "../views/BudgetsView.vue";
 import ProfileView from "../views/ProfileView.vue";
+import AIAssistantView from "../views/AIAssistantView.vue";
 
 const routes = [
   {
@@ -41,6 +42,11 @@ const routes = [
   {
     path: "/profile",
     component: ProfileView,
+  },
+
+  {
+    path: "/ai",
+    component: AIAssistantView,
   },
 ];
 
