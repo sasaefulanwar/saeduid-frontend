@@ -4,22 +4,19 @@ import api from "../api/axios";
 import { formatCurrency } from "../utils/currency";
 import { toast } from "vue3-toastify";
 import {
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Filter,
-  Calendar,
-  Tag,
-  Search,
   Edit,
   Trash2,
-  AlignLeft, // Icon baru buat deskripsi
-  Banknote, // Icon baru buat jumlah uang
-  Activity, // Icon baru buat tipe
-  Layers, // Icon baru buat kategori
+  RefreshCw,
+  FileText,
+  Banknote,
+  ArrowRightLeft,
+  Layers,
   PlusCircle,
   XCircle,
 } from "lucide-vue-next";
+import { ChevronDown } from "lucide-vue-next"; // Pastiin ini ada cuy!
 
+const isTipsOpen = ref(false);
 const transactions = ref([]);
 const categories = ref([]);
 
@@ -182,63 +179,144 @@ onMounted(() => {
 });
 </script>
 
+<style scoped>
+/* Animasi Expand/Collapse Mulus */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 300px; /* Cukup buat nampung card-nya */
+  opacity: 1;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  margin-top: 0;
+}
+</style>
+
 <template>
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
-    <!-- Header -->
+    <!-- Header: Elegant Stacked Layout -->
     <div class="mb-10">
-      <h1
-        class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight"
+      <div
+        class="mb-6 border-l-4 border-slate-800 pl-4 dark:border-slate-300 flex flex-col sm:flex-row sm:items-end justify-between gap-4"
       >
-        Transactions 💸
-      </h1>
-      <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium">
-        Catat dan pantau arus kas kamu dengan mudah.
-      </p>
+        <div>
+          <h1
+            class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl"
+          >
+            Transaksi
+          </h1>
+          <p class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+            Kamu sudah mencatat
+            <span class="font-semibold text-slate-800 dark:text-slate-200">{{
+              filteredTransactions.length
+            }}</span>
+            transaksi
+          </p>
+        </div>
+      </div>
+
+      <button
+        @click="isTipsOpen = !isTipsOpen"
+        class="group flex items-center gap-2.5 px-4 py-2.5 bg-white/70 dark:bg-black/40 backdrop-blur-xl rounded-2xl border border-slate-200/60 dark:border-white/10 shadow-sm hover:shadow-md transition-all duration-300 mb-2"
+      >
+        <div
+          class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 group-hover:scale-110 transition-transform"
+        ></div>
+        <span
+          class="text-[13px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300 transition-colors group-hover:text-slate-900 dark:group-hover:text-white"
+        >
+          Smart Tips
+        </span>
+        <ChevronDown
+          :size="16"
+          :class="[
+            'text-slate-400 transition-transform duration-300 ml-1',
+            isTipsOpen ? 'rotate-180' : '',
+          ]"
+        />
+      </button>
+
+      <transition name="expand">
+        <div v-if="isTipsOpen" class="overflow-hidden">
+          <div
+            class="relative bg-white/70 dark:bg-black/40 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-white/80 dark:border-white/10 p-6 sm:p-8 mt-2 transition-all group"
+          >
+            <div
+              class="absolute -top-12 -right-12 w-40 h-40 bg-emerald-500/15 dark:bg-emerald-500/20 rounded-full blur-3xl pointer-events-none transition-transform duration-700 group-hover:scale-110"
+            ></div>
+            <div class="relative z-10">
+              <h3
+                class="text-[19px] sm:text-xl font-extrabold text-slate-800 dark:text-white mb-3 tracking-tight"
+              >
+                Catat Pengeluaran Sekecil Apapun!
+              </h3>
+              <p
+                class="text-[14px] text-slate-600 dark:text-slate-300 leading-relaxed font-medium"
+              >
+                Tahu nggak? Kebocoran finansial paling sering terjadi bukan
+                karena beli barang mahal, tapi dari pengeluaran kecil yang
+                sering diabaikan (kayak uang parkir, jajan minimarket, atau
+                biaya admin). Biasakan langsung catat setiap ada uang
+                keluar/masuk biar <i>cashflow</i> kamu tetap sehat!
+              </p>
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
 
     <!-- Form Section -->
+    <!-- Form Section Transaksi: iOS Glassmorphism (With Icons!) 🪟✨ -->
     <div
-      class="bg-white dark:bg-slate-800/90 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700/60 p-8 mb-8 backdrop-blur-sm transition-colors"
+      class="bg-white/70 dark:bg-black/40 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-white/80 dark:border-white/10 p-6 sm:p-8 mb-8 transition-all"
     >
+      <!-- Form Header -->
       <div
-        class="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/80 pb-5 mb-6"
+        class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200/60 dark:border-slate-700/30 pb-5 mb-6"
       >
         <h2
-          class="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white tracking-tight"
+          class="text-[19px] sm:text-xl font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2.5"
         >
           <component
             :is="isEditing ? Edit : PlusCircle"
-            :size="20"
-            class="text-blue-500"
+            :size="22"
+            class="text-blue-500 drop-shadow-sm"
           />
           {{ isEditing ? "Edit Transaksi" : "Tambah Transaksi Baru" }}
         </h2>
         <button
           v-if="isEditing"
           @click="cancelEdit"
-          class="flex items-center gap-1 text-sm font-semibold text-rose-500 hover:text-rose-600 transition-colors"
+          class="mt-3 sm:mt-0 flex items-center gap-1.5 text-[15px] font-medium text-rose-500 hover:text-rose-600 transition-colors"
         >
           <XCircle :size="16" /> Batal Edit
         </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <!-- Form Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <!-- Input Deskripsi -->
         <div class="space-y-1.5">
           <label
-            class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
-            >Deskripsi</label
+            class="block text-[13px] font-semibold text-slate-600 dark:text-slate-300/90 ml-1"
           >
+            Deskripsi
+          </label>
           <div class="relative group">
             <div
-              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors"
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 transition-colors"
             >
-              <AlignLeft :size="16" />
+              <FileText :size="18" />
             </div>
             <input
               v-model="description"
               placeholder="Makan siang, Gaji..."
-              class="w-full pl-11 pr-4 py-3 text-sm rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400"
+              class="w-full pl-11 pr-4 py-3.5 text-[15px] rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all duration-300 placeholder-slate-400 dark:placeholder-slate-500 shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
             />
           </div>
         </div>
@@ -246,20 +324,21 @@ onMounted(() => {
         <!-- Input Jumlah -->
         <div class="space-y-1.5">
           <label
-            class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
-            >Jumlah (Rp)</label
+            class="block text-[13px] font-semibold text-slate-600 dark:text-slate-300/90 ml-1"
           >
+            Jumlah (Rp)
+          </label>
           <div class="relative group">
             <div
-              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors"
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 transition-colors"
             >
-              <Banknote :size="16" />
+              <Banknote :size="18" />
             </div>
             <input
               v-model="amount"
               type="number"
               placeholder="50000"
-              class="w-full pl-11 pr-4 py-3 text-sm rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400"
+              class="w-full pl-11 pr-4 py-3.5 text-[15px] rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all duration-300 placeholder-slate-400 dark:placeholder-slate-500 shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
             />
           </div>
         </div>
@@ -267,21 +346,26 @@ onMounted(() => {
         <!-- Input Tipe -->
         <div class="space-y-1.5">
           <label
-            class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
-            >Tipe</label
+            class="block text-[13px] font-semibold text-slate-600 dark:text-slate-300/90 ml-1"
           >
+            Tipe
+          </label>
           <div class="relative group">
             <div
-              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors"
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 transition-colors"
             >
-              <Activity :size="16" />
+              <ArrowRightLeft :size="18" />
             </div>
             <select
               v-model="type"
-              class="w-full pl-11 pr-4 py-3 text-sm rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+              class="w-full pl-11 pr-4 py-3.5 text-[15px] rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all duration-300 appearance-none cursor-pointer shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
             >
-              <option value="income">Pemasukan</option>
-              <option value="expense">Pengeluaran</option>
+              <option value="income" class="bg-white dark:bg-slate-800">
+                Pemasukan
+              </option>
+              <option value="expense" class="bg-white dark:bg-slate-800">
+                Pengeluaran
+              </option>
             </select>
           </div>
         </div>
@@ -289,24 +373,28 @@ onMounted(() => {
         <!-- Input Kategori -->
         <div class="space-y-1.5">
           <label
-            class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
-            >Kategori</label
+            class="block text-[13px] font-semibold text-slate-600 dark:text-slate-300/90 ml-1"
           >
+            Kategori
+          </label>
           <div class="relative group">
             <div
-              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors"
+              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 transition-colors"
             >
-              <Layers :size="16" />
+              <Layers :size="18" />
             </div>
             <select
               v-model="categoryId"
-              class="w-full pl-11 pr-4 py-3 text-sm rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none cursor-pointer"
+              class="w-full pl-11 pr-4 py-3.5 text-[15px] rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all duration-300 appearance-none cursor-pointer shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
             >
-              <option value="" disabled>Pilih Kategori</option>
+              <option value="" disabled class="bg-white dark:bg-slate-800">
+                Pilih Kategori
+              </option>
               <option
                 v-for="category in categories"
                 :key="category.id"
                 :value="category.id"
+                class="bg-white dark:bg-slate-800"
               >
                 {{ category.name }}
               </option>
@@ -320,196 +408,169 @@ onMounted(() => {
         <button
           v-if="isEditing"
           @click="cancelEdit"
-          class="text-sm font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 py-3 px-6 rounded-full transition-all duration-300"
+          class="text-[15px] font-medium bg-white/80 dark:bg-white/10 hover:bg-slate-50 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 py-3 px-6 rounded-full border border-slate-200/60 dark:border-transparent transition-all duration-300 backdrop-blur-md shadow-sm dark:shadow-none"
         >
           Batal
         </button>
+
         <button
           @click="saveTransaction"
           :disabled="isLoading"
-          class="text-sm font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 px-8 rounded-full transition-all duration-300 shadow-md shadow-blue-500/30 active:scale-95 disabled:opacity-70 flex items-center gap-2"
+          class="text-[15px] font-medium bg-blue-500 hover:bg-blue-600 text-white py-3 px-8 rounded-full transition-all duration-300 shadow-[0_4px_16px_rgba(59,130,246,0.3)] hover:shadow-[0_4px_20px_rgba(59,130,246,0.5)] active:scale-[0.97] disabled:opacity-70 disabled:hover:scale-100 flex items-center gap-2"
         >
           <span
             v-if="isLoading"
-            class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+            class="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"
           ></span>
-          {{
-            isLoading
-              ? "Menyimpan..."
-              : isEditing
-                ? "Update Data"
-                : "Simpan Data"
-          }}
+          {{ isLoading ? "Menyimpan..." : isEditing ? "Update" : "Simpan" }}
         </button>
       </div>
     </div>
 
-    <!-- Filter Section (Pill Styled) -->
+    <!-- Filter Section -->
     <div
-      class="bg-slate-50/70 dark:bg-slate-800/40 rounded-[2rem] border border-slate-200/60 dark:border-slate-700/50 p-6 mb-8 transition-colors backdrop-blur-sm"
+      class="bg-white/70 dark:bg-black/40 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-white/80 dark:border-white/10 p-6 mb-8 transition-all"
     >
       <div class="flex items-center justify-between mb-5">
         <h2
-          class="text-sm font-bold flex items-center gap-2 text-slate-700 dark:text-slate-300"
+          class="text-[17px] font-bold text-slate-800 dark:text-white tracking-tight"
         >
-          <Filter :size="16" class="text-blue-500" /> Filter Pencarian
+          Filter Pencarian
         </h2>
+
         <button
           @click="resetFilter"
-          class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-indigo-600 transition-colors"
+          class="group flex items-center gap-1.5 text-[14px] font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors active:scale-95"
         >
+          <RefreshCw
+            :size="14"
+            class="transition-transform duration-500 group-hover:rotate-180"
+          />
           Reset Filter
         </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="relative group">
-          <div
-            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500"
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <input
+          type="date"
+          v-model="filterStartDate"
+          class="w-full px-4 py-3 text-[14px] rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all duration-300 shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+        />
+
+        <input
+          type="date"
+          v-model="filterEndDate"
+          class="w-full px-4 py-3 text-[14px] rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all duration-300 shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+        />
+
+        <select
+          v-model="filterType"
+          class="w-full px-4 py-3 text-[14px] rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all duration-300 appearance-none cursor-pointer shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+        >
+          <option value="all" class="bg-white dark:bg-slate-800">
+            Semua Tipe
+          </option>
+          <option value="income" class="bg-white dark:bg-slate-800">
+            Pemasukan (Income)
+          </option>
+          <option value="expense" class="bg-white dark:bg-slate-800">
+            Pengeluaran (Expense)
+          </option>
+        </select>
+
+        <select
+          v-model="filterCategory"
+          class="w-full px-4 py-3 text-[14px] rounded-2xl border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all duration-300 appearance-none cursor-pointer shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+        >
+          <option value="all" class="bg-white dark:bg-slate-800">
+            Semua Kategori
+          </option>
+          <option
+            v-for="cat in categories"
+            :key="cat.id"
+            :value="cat.id"
+            class="bg-white dark:bg-slate-800"
           >
-            <Calendar :size="14" />
-          </div>
-          <input
-            type="date"
-            v-model="filterStartDate"
-            class="w-full pl-10 pr-3 py-2.5 text-sm rounded-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-1 focus:ring-blue-500 outline-none text-slate-600 dark:text-slate-300"
-          />
-        </div>
-        <div class="relative group">
-          <div
-            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500"
-          >
-            <Calendar :size="14" />
-          </div>
-          <input
-            type="date"
-            v-model="filterEndDate"
-            class="w-full pl-10 pr-3 py-2.5 text-sm rounded-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-1 focus:ring-blue-500 outline-none text-slate-600 dark:text-slate-300"
-          />
-        </div>
-        <div class="relative group">
-          <div
-            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500"
-          >
-            <Tag :size="14" />
-          </div>
-          <select
-            v-model="filterType"
-            class="w-full pl-10 pr-3 py-2.5 text-sm rounded-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-1 focus:ring-blue-500 outline-none text-slate-600 dark:text-slate-300 appearance-none cursor-pointer"
-          >
-            <option value="all">Semua Tipe</option>
-            <option value="income">Pemasukan (Income)</option>
-            <option value="expense">Pengeluaran (Expense)</option>
-          </select>
-        </div>
-        <div class="relative group">
-          <div
-            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500"
-          >
-            <Layers :size="14" />
-          </div>
-          <select
-            v-model="filterCategory"
-            class="w-full pl-10 pr-3 py-2.5 text-sm rounded-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus:ring-1 focus:ring-blue-500 outline-none text-slate-600 dark:text-slate-300 appearance-none cursor-pointer"
-          >
-            <option value="all">Semua Kategori</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-              {{ cat.name }}
-            </option>
-          </select>
-        </div>
+            {{ cat.name }}
+          </option>
+        </select>
       </div>
     </div>
 
     <!-- List Section -->
     <div
-      class="bg-white dark:bg-slate-800/90 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700/60 p-8 transition-colors backdrop-blur-sm"
+      class="bg-white/70 dark:bg-black/40 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-white/80 dark:border-white/10 p-6 sm:p-8 transition-all"
     >
+      <!-- Header & Search -->
       <div
-        class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
+        class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-200/60 dark:border-slate-700/30 pb-5"
       >
         <h2
-          class="text-xl font-bold text-slate-900 dark:text-white tracking-tight"
+          class="text-[19px] font-bold text-slate-800 dark:text-white tracking-tight"
         >
           Riwayat Transaksi
         </h2>
 
         <div class="flex items-center gap-3 w-full md:w-auto">
-          <!-- Search Bar Melengkung Kapsul -->
-          <div class="relative w-full md:w-72 group">
-            <div
-              class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors"
-            >
-              <Search :size="16" />
-            </div>
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Cari transaksi..."
-              class="w-full pl-11 pr-4 py-2.5 text-sm rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            />
-          </div>
+          <!-- Search Bar Kaca -->
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari transaksi..."
+            class="w-full md:w-64 px-4 py-2.5 text-[14px] rounded-full border border-slate-200/80 dark:border-white/5 bg-slate-50/60 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40 transition-all shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
+          />
+          <!-- Item Count Badge -->
           <span
-            class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-4 py-2.5 rounded-full whitespace-nowrap"
+            class="text-[13px] font-medium text-slate-600 dark:text-slate-300 bg-white/60 dark:bg-white/10 border border-slate-200/60 dark:border-white/5 px-3.5 py-2.5 rounded-full whitespace-nowrap shadow-sm backdrop-blur-md"
           >
             {{ filteredTransactions.length }} Item
           </span>
         </div>
       </div>
 
-      <!-- Empty State -->
+      <!-- Empty State (No Icon, Super Clean) -->
       <div
         v-if="filteredTransactions.length === 0"
-        class="flex flex-col items-center justify-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-[2rem]"
+        class="flex flex-col items-center justify-center py-14 border border-dashed border-slate-300/70 dark:border-slate-700/50 rounded-[1.5rem] bg-white/30 dark:bg-white/5 backdrop-blur-sm"
       >
-        <div
-          class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3"
-        >
-          <Search :size="24" class="text-slate-300 dark:text-slate-500" />
-        </div>
-        <p class="text-slate-400 dark:text-slate-500 font-medium text-sm">
+        <p class="text-slate-500 dark:text-slate-400 font-medium text-[14px]">
           Tidak ada transaksi yang sesuai.
         </p>
       </div>
 
-      <!-- List Items (Premium Style) -->
-      <div class="space-y-3">
+      <!-- List Items -->
+      <div class="space-y-2.5">
         <div
           v-for="trx in filteredTransactions"
           :key="trx.id"
-          class="flex items-center justify-between gap-4 p-4 pl-5 pr-5 rounded-[1.5rem] border border-slate-100 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-700/30 hover:border-slate-200 hover:shadow-sm transition-all duration-300 group"
+          class="flex items-center justify-between gap-4 p-4 pl-5 pr-4 rounded-[1.5rem] bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/5 hover:bg-white/90 dark:hover:bg-white/10 transition-all duration-300 group shadow-[0_2px_10px_rgba(0,0,0,0.02)] dark:shadow-none"
         >
-          <!-- Kiri: Icon + Deskripsi (Kita kasih min-w-0 & flex-1 biar teks bisa terpotong rapi) -->
+          <!-- Kiri: Dot Indicator + Deskripsi -->
           <div class="flex items-center gap-4 min-w-0 flex-1">
+            <!-- Apple-style Glowing Dot (Pengganti Icon Panah) -->
             <div
               :class="[
-                'w-10 h-10 shrink-0 rounded-full flex items-center justify-center shadow-inner transition-transform group-hover:scale-105',
+                'w-2.5 h-2.5 shrink-0 rounded-full shadow-sm',
                 trx.type === 'income'
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500'
-                  : 'bg-rose-50 dark:bg-rose-900/20 text-rose-500',
+                  ? 'bg-emerald-400 dark:bg-emerald-500 shadow-emerald-400/50'
+                  : 'bg-rose-400 dark:bg-rose-500 shadow-rose-400/50',
               ]"
-            >
-              <ArrowUpCircle
-                v-if="trx.type === 'income'"
-                :size="20"
-                stroke-width="2.5"
-              />
-              <ArrowDownCircle v-else :size="20" stroke-width="2.5" />
-            </div>
+            ></div>
 
             <div class="min-w-0">
               <p
-                class="font-bold text-slate-800 dark:text-slate-200 text-sm truncate tracking-tight"
+                class="font-bold text-[15px] text-slate-800 dark:text-slate-100 truncate tracking-tight"
               >
                 {{ trx.description }}
               </p>
               <p
-                class="text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1.5 truncate"
+                class="text-[12px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate mt-0.5"
               >
                 <span
-                  class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md"
-                  >{{ trx.category?.name || "Lainnya" }}</span
+                  class="px-2 py-0.5 bg-slate-200/50 dark:bg-slate-800/50 rounded-md text-slate-600 dark:text-slate-300"
                 >
+                  {{ trx.category?.name || "Lainnya" }}
+                </span>
                 •
                 {{
                   new Date(
@@ -523,33 +584,36 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Kanan: Nominal + Aksi (Kita kasih shrink-0 biar nggak kena peres) -->
+          <!-- Kanan: Nominal + Aksi -->
           <div class="flex items-center gap-4 shrink-0">
+            <!-- Nominal -->
             <div
               :class="[
-                'font-extrabold text-right text-sm',
-                trx.type === 'income' ? 'text-emerald-500' : 'text-rose-500',
+                'font-bold text-right text-[15px] tracking-tight',
+                trx.type === 'income'
+                  ? 'text-emerald-500 dark:text-emerald-400'
+                  : 'text-rose-500 dark:text-rose-400',
               ]"
             >
               {{ trx.type === "income" ? "+" : "-" }}
               {{ formatCurrency(trx.amount) }}
             </div>
 
-            <!-- Tombol Aksi -->
+            <!-- Tombol Aksi (Icon Tetap Ada Karena CTA) -->
             <div
-              class="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm"
+              class="flex items-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-full shadow-sm overflow-hidden"
             >
               <button
                 @click="editTransaction(trx)"
-                class="p-2 text-slate-400 hover:text-blue-500 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                class="p-2.5 text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 title="Edit"
               >
                 <Edit :size="14" stroke-width="2.5" />
               </button>
-              <div class="w-px h-4 bg-slate-200 dark:border-slate-700"></div>
+              <div class="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
               <button
                 @click="deleteTransaction(trx.id)"
-                class="p-2 text-slate-400 hover:text-rose-500 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+                class="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 title="Hapus"
               >
                 <Trash2 :size="14" stroke-width="2.5" />
