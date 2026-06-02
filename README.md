@@ -4,7 +4,7 @@ SAEduid is a personal finance management web application that helps users track 
 
 ## 🌍 Live Demo
 
-https://saeduid.my.id
+https://www.saeduid.my.id
 
 ## ✨ Features
 
