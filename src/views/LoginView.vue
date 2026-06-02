@@ -54,7 +54,7 @@ const callbackGoogle = async (response) => {
     });
     authStore.setToken(res.data.token);
 
-    toast.success("Login Google berhasil!"); // Toast Sukses
+    toast.success("Login Google berhasil!");
     router.push("/dashboard");
   } catch (err) {
     console.error("Google Auth Error:", err);
@@ -65,8 +65,6 @@ const callbackGoogle = async (response) => {
 };
 
 const loginWithGoogle = () => {
-  // Arahkan ke endpoint Google Auth backend lu
-  // Nanti backend redirect balik bawa token
   window.location.href =
     "http://saeduid-backend-production.up.railway.app/api/v1/auth/google";
 };
